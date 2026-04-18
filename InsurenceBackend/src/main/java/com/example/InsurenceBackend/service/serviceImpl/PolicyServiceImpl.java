@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import com.example.InsurenceBackend.Dtos.PolicyMapper;
 import com.example.InsurenceBackend.Dtos.PolicyRequest;
 import com.example.InsurenceBackend.Dtos.PolicyResponse;
+import com.example.InsurenceBackend.Exception.PolicyNotFoundException;
+import com.example.InsurenceBackend.Exception.UserNotFoundException;
 import com.example.InsurenceBackend.model.Policy;
 import com.example.InsurenceBackend.model.User;
 import com.example.InsurenceBackend.service.PolicyService;
@@ -35,7 +37,7 @@ public UserRepository userRepo;
     @Override
      public PolicyResponse createPolicy(PolicyRequest request) {
         User user = userRepo.findById(request.getPolicyholderId())
-                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "User not found with id: " + request.getPolicyholderId()));
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + request.getPolicyholderId()));
         Policy policy = PolicyMapper.toEntity(request, user);
         if (policy.getStartDate() == null) {
             policy.setStartDate(java.time.LocalDateTime.now());
@@ -46,7 +48,7 @@ public UserRepository userRepo;
      @Override
     public PolicyResponse findById(Long id) {
         Policy policy = policyRepo.findById(id)
-                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Policy not found with id: " + id));
+                .orElseThrow(() -> new PolicyNotFoundException("Policy not found with id: " + id));
         return PolicyMapper.toDto(policy);
     }
 

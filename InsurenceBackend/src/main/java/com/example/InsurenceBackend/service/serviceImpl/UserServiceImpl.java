@@ -1,12 +1,14 @@
-package com.example.InsurenceBackend.service;
+package com.example.InsurenceBackend.service.serviceImpl;
+
 import java.util.List;
-import com.example.InsurenceBackend.service.serviceImpl.UserService;
+import java.util.Collections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import com.example.InsurenceBackend.Repository.UserRepository;
 import com.example.InsurenceBackend.model.User;
 import com.example.InsurenceBackend.enums.UserRole;
-import java.util.Collections;
+import com.example.InsurenceBackend.service.UserService;
 
 @Service
 public class UserServiceImpl implements UserService {

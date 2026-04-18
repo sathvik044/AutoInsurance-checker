@@ -1,6 +1,7 @@
 package com.example.InsurenceBackend.enums;
 
 public enum ClaimStatus {
+    CREATED,
     SUBMITTED,
     DOCUMENT_VERIFICATION,
     UNDER_REVIEW,

@@ -24,7 +24,7 @@ public class PolicyController {
 
     @GetMapping
     public ResponseEntity<List<PolicyResponse>> getPolicies(
-            @RequestParam(required = false) Long userId) {
+            @RequestParam(name = "userId", required = false) Long userId) {
 
         if (userId != null) {
             return ResponseEntity.ok(policyService.findByUserId(userId));
@@ -41,13 +41,13 @@ public class PolicyController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PolicyResponse> getPolicyById(@PathVariable Long id) {
+    public ResponseEntity<PolicyResponse> getPolicyById(@PathVariable(name = "id") Long id) {
         return ResponseEntity.ok(policyService.findById(id));
     }
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<PolicyResponse>> getPoliciesByUserId(
-            @PathVariable Long userId) {
+            @PathVariable(name = "userId") Long userId) {
 
         return ResponseEntity.ok(policyService.findByUserId(userId));
     }
