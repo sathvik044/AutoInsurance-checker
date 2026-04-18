@@ -46,6 +46,13 @@ public class GlobalExceptionHandler {
         log.error("Claim document not found: {}", ex.getMessage());
         return buildResponse(ex.getMessage(), 404, request.getContextPath());
     }
+     @ExceptionHandler(ClaimTransactionNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleClaimTransactionNotFound(
+            ClaimTransactionNotFoundException ex,
+            WebRequest request) {
+        log.error("Claim transaction not found: {}", ex.getMessage());
+        return buildResponse(ex.getMessage(), 404, request.getContextPath());
+    }
 
     // BAD REQUEST
     @ExceptionHandler(BadRequestException.class)
