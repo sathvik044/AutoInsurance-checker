@@ -1,18 +1,24 @@
 package com.example.InsurenceBackend.service.serviceImpl;
 
-import com.example.InsurenceBackend.Dtos.ClaimDocumentRequestDto;
-import com.example.InsurenceBackend.Dtos.ClaimDocumentResponseDto;
+import com.example.InsurenceBackend.Dtos.*;
 import com.example.InsurenceBackend.Exception.BadRequestException;
 import com.example.InsurenceBackend.Exception.ClaimNotFoundException;
+import com.example.InsurenceBackend.Exception.PolicyNotFoundException;
+import com.example.InsurenceBackend.Exception.UserNotFoundException;
 import com.example.InsurenceBackend.Repository.ClaimInsurenceRepository;
+import com.example.InsurenceBackend.Repository.PolicyRepository;
+import com.example.InsurenceBackend.Repository.UserRepository;
 import com.example.InsurenceBackend.enums.ClaimStatus;
 import com.example.InsurenceBackend.model.ClaimInsurence;
+import com.example.InsurenceBackend.model.Policy;
+import com.example.InsurenceBackend.model.User;
 import com.example.InsurenceBackend.service.ClaimDocService;
 import com.example.InsurenceBackend.service.ClaimService;
 
 import lombok.RequiredArgsConstructor;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 
@@ -21,32 +27,47 @@ import org.springframework.stereotype.Service;
 public class ClaimServiceImpl implements ClaimService {
 
     private final ClaimInsurenceRepository claimRepo;
+    private final PolicyRepository policyRepo;
+    private final UserRepository userRepo;
     private final ClaimDocService claimDocService;
 
     @Override
-    public ClaimInsurence findById(Long id){
-        return claimRepo.findById(id)
-                .orElseThrow(() -> new ClaimNotFoundException("Claim not found with id: " + id));
-
+    public ClaimResponseDto findById(Long id){
+        ClaimInsurence claim = getClaim(id);
+        return ClaimMapper.toDto(claim);
     }
-    @Override
-    public List<ClaimInsurence> findByClaimantId(Long claimantId){
-        return claimRepo.findByClaimantId(claimantId);
-    }
-    @Override
-    public List<ClaimInsurence> findAll(){
-        return claimRepo.findAll();
-    }   
 
     @Override
-    public ClaimInsurence createClaim(ClaimInsurence claim) {
+    public List<ClaimResponseDto> findByClaimantId(Long claimantId){
+        return claimRepo.findByClaimantId(claimantId).stream()
+                .map(ClaimMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ClaimResponseDto> findAll(){
+        return claimRepo.findAll().stream()
+                .map(ClaimMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ClaimResponseDto createClaim(ClaimRequestDto claimDto) {
+        Policy policy = policyRepo.findById(claimDto.getPolicyId())
+                .orElseThrow(() -> new PolicyNotFoundException("Policy not found with id: " + claimDto.getPolicyId()));
+        
+        User claimant = userRepo.findById(claimDto.getClaimantId())
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + claimDto.getClaimantId()));
+
+        ClaimInsurence claim = ClaimMapper.toEntity(claimDto, policy, claimant);
         claim.setStatus(ClaimStatus.CREATED);
-        return claimRepo.save(claim);
+        
+        return ClaimMapper.toDto(claimRepo.save(claim));
     }
 
     
     @Override
-    public ClaimInsurence submitClaim(Long id) {
+    public ClaimResponseDto submitClaim(Long id) {
         ClaimInsurence claim = getClaim(id);
 
         if (claim.getStatus() != ClaimStatus.CREATED) {
@@ -54,11 +75,11 @@ public class ClaimServiceImpl implements ClaimService {
         }
 
         claim.setStatus(ClaimStatus.SUBMITTED);
-        return claimRepo.save(claim);
+        return ClaimMapper.toDto(claimRepo.save(claim));
     }
 
     @Override
-    public ClaimInsurence verifyDocuments(Long id) {
+    public ClaimResponseDto verifyDocuments(Long id) {
         ClaimInsurence claim = getClaim(id);
 
         if (claim.getStatus() != ClaimStatus.SUBMITTED) {
@@ -66,11 +87,11 @@ public class ClaimServiceImpl implements ClaimService {
         }
 
         claim.setStatus(ClaimStatus.DOCUMENT_VERIFICATION);
-        return claimRepo.save(claim);
+        return ClaimMapper.toDto(claimRepo.save(claim));
     }
 
     @Override
-    public ClaimInsurence moveToReview(Long id) {
+    public ClaimResponseDto moveToReview(Long id) {
         ClaimInsurence claim = getClaim(id);
 
         if (claim.getStatus() != ClaimStatus.DOCUMENT_VERIFICATION) {
@@ -78,11 +99,11 @@ public class ClaimServiceImpl implements ClaimService {
         }
 
         claim.setStatus(ClaimStatus.UNDER_REVIEW);
-        return claimRepo.save(claim);
+        return ClaimMapper.toDto(claimRepo.save(claim));
     }
 
     @Override
-    public ClaimInsurence autoValidate(Long id) {
+    public ClaimResponseDto autoValidate(Long id) {
         ClaimInsurence claim = getClaim(id);
 
         if (claim.getStatus() != ClaimStatus.UNDER_REVIEW) {
@@ -90,11 +111,11 @@ public class ClaimServiceImpl implements ClaimService {
         }
 
         claim.setStatus(ClaimStatus.AUTO_VALIDATED);
-        return claimRepo.save(claim);
+        return ClaimMapper.toDto(claimRepo.save(claim));
     }
 
     @Override
-    public ClaimInsurence adjusterApprove(Long id) {
+    public ClaimResponseDto adjusterApprove(Long id) {
         ClaimInsurence claim = getClaim(id);
 
         if (claim.getStatus() != ClaimStatus.AUTO_VALIDATED) {
@@ -102,11 +123,11 @@ public class ClaimServiceImpl implements ClaimService {
         }
 
         claim.setStatus(ClaimStatus.ADJUSTER_APPROVED);
-        return claimRepo.save(claim);
+        return ClaimMapper.toDto(claimRepo.save(claim));
     }
 
     @Override
-    public ClaimInsurence managerApprove(Long id) {
+    public ClaimResponseDto managerApprove(Long id) {
         ClaimInsurence claim = getClaim(id);
 
         if (claim.getStatus() != ClaimStatus.ADJUSTER_APPROVED) {
@@ -114,12 +135,12 @@ public class ClaimServiceImpl implements ClaimService {
         }
 
         claim.setStatus(ClaimStatus.MANAGER_APPROVAL);
-        return claimRepo.save(claim);
+        return ClaimMapper.toDto(claimRepo.save(claim));
     }
 
    
     @Override
-    public ClaimInsurence approve(Long id) {
+    public ClaimResponseDto approve(Long id) {
         ClaimInsurence claim = getClaim(id);
 
         if (claim.getStatus() != ClaimStatus.MANAGER_APPROVAL) {
@@ -127,11 +148,11 @@ public class ClaimServiceImpl implements ClaimService {
         }
 
         claim.setStatus(ClaimStatus.APPROVED);
-        return claimRepo.save(claim);
+        return ClaimMapper.toDto(claimRepo.save(claim));
     }
 
     @Override
-    public ClaimInsurence settle(Long id) {
+    public ClaimResponseDto settle(Long id) {
         ClaimInsurence claim = getClaim(id);
 
         if (claim.getStatus() != ClaimStatus.APPROVED) {
@@ -139,22 +160,23 @@ public class ClaimServiceImpl implements ClaimService {
         }
 
         claim.setStatus(ClaimStatus.SETTLED);
-        return claimRepo.save(claim);
+        return ClaimMapper.toDto(claimRepo.save(claim));
     }
 
     @Override
-    public ClaimInsurence reject(Long id) {
+    public ClaimResponseDto reject(Long id) {
         ClaimInsurence claim = getClaim(id);
 
         claim.setStatus(ClaimStatus.REJECTED);
-        return claimRepo.save(claim);
+        return ClaimMapper.toDto(claimRepo.save(claim));
     }
 
     private ClaimInsurence getClaim(Long id) {
         return claimRepo.findById(id)
                 .orElseThrow(() -> new ClaimNotFoundException("Claim not found with id: " + id));
     }
-     @Override
+
+    @Override
     public List<ClaimDocumentResponseDto> uploadDocuments(Long claimId, List<ClaimDocumentRequestDto> docs) {
         return claimDocService.uploadDocuments(claimId, docs);
     }

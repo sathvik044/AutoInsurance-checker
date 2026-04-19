@@ -7,12 +7,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import  java.time.LocalDateTime;
+import lombok.Builder;
 
 import com.example.InsurenceBackend.enums.ClaimStatus;
 import com.example.InsurenceBackend.enums.ClaimType;
 
 import lombok.Data;
-
+@Builder
 @Data
 @Entity
 @Table(name = "claims")
