@@ -6,9 +6,9 @@ import com.example.InsurenceBackend.model.ClaimInsurence;
 import com.example.InsurenceBackend.model.Policy;
 import com.example.InsurenceBackend.model.User;
 
+
 public class ClaimMapper {
     public static ClaimInsurence toEntity(ClaimRequestDto dto, Policy policy, User claimant) {
-
     return ClaimInsurence.builder()
             .insurancePolicy(policy)
             .claimant(claimant)

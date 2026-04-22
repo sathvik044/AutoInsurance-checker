@@ -9,14 +9,19 @@ import jakarta.persistence.ManyToOne;
 import  java.time.LocalDateTime;
 import lombok.Builder;
 
+
 import com.example.InsurenceBackend.enums.ClaimStatus;
 import com.example.InsurenceBackend.enums.ClaimType;
-
 import lombok.Data;
-@Builder
-@Data
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
 @Entity
 @Table(name = "claims")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ClaimInsurence {
     
     @Id

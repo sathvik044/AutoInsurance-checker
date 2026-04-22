@@ -11,5 +11,5 @@ public enum ClaimStatus {
     APPROVED,
     REJECTED,
     SETTLED,
-    FRAUD_FLAGGED
+    FRAUD_FLAGGED;
 }
