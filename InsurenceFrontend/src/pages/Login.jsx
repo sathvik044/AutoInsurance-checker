@@ -1,137 +1,110 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { userService } from '../services/api';
+import { useMutation } from '@tanstack/react-query';
+import { useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '../context/useAuth';
-import { UserPlus, LogIn, Shield } from 'lucide-react';
+import { LogIn, Shield, Lock, Mail } from 'lucide-react';
 
 const Login = () => {
-  const [newName, setNewName] = useState('');
-  const [newEmail, setNewEmail] = useState('');
-  const [newRole, setNewRole] = useState('POLICYHOLDER');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
   const { login } = useAuth();
-  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
-  const { data: users, isLoading } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => userService.getUsers().then(res => res.data),
-  });
-
-  const createUserMutation = useMutation({
-    mutationFn: (userData) => userService.createUser(userData).then(res => res.data),
-    onSuccess: (newUser) => {
-      queryClient.invalidateQueries(['users']);
-      login(newUser);
+  const loginMutation = useMutation({
+    mutationFn: async (credentials) => {
+      const response = await axios.post('http://localhost:8080/api/login', credentials);
+      return response.data;
     },
+    onSuccess: (data) => {
+      // The backend returns a LoginResponse containing {id, name, email, token, role, message}
+      login(data);
+      navigate('/');
+    },
+    onError: (error) => {
+      setErrorMsg(error.response?.data?.message || 'Invalid email or password ❌');
+    }
   });
 
-  const handleCreateUser = (e) => {
+  const handleLogin = (e) => {
     e.preventDefault();
-    if (newName.trim() && newEmail.trim()) {
-      createUserMutation.mutate({ name: newName, email: newEmail, role: newRole });
+    setErrorMsg('');
+    if (email.trim() && password.trim()) {
+      loginMutation.mutate({ email, password });
     }
   };
 
   return (
-    <div className="mx-auto max-w-5xl py-10 sm:py-14 px-4">
-      <div className="relative overflow-hidden rounded-3xl border border-white/40 bg-white/70 p-8 sm:p-10 shadow-xl backdrop-blur">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-600/10 via-indigo-600/10 to-fuchsia-600/10" />
+    <div className="mx-auto max-w-lg py-10 sm:py-20 px-4">
+      <div className="relative overflow-hidden rounded-3xl border border-white/40 bg-white/70 p-8 sm:p-10 shadow-2xl backdrop-blur-xl">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-600/5 via-indigo-600/5 to-fuchsia-600/5" />
 
-        <div className="relative text-center mb-10">
-          <div className="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-fuchsia-600 text-white shadow">
+        <div className="relative text-center mb-8">
+          <div className="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-fuchsia-600 text-white shadow-lg">
             <Shield size={34} />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">Welcome to InsureHCL</h1>
-          <p className="text-slate-600 mt-2">Manage policies and claims with a clean workflow.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Welcome Back</h1>
+          <p className="text-slate-500 mt-2">Sign in to your account</p>
         </div>
 
-        <div className="relative grid lg:grid-cols-2 gap-6 sm:gap-8">
-        {/* Existing Users */}
-        <div className="bg-white/80 p-6 rounded-2xl shadow-sm border border-slate-200/70">
-          <h2 className="text-lg sm:text-xl font-semibold mb-5 flex items-center gap-2 text-slate-900">
-            <LogIn className="text-blue-600" />
-            Select Existing User
-          </h2>
-          {isLoading ? (
-            <div className="text-center py-8 text-slate-600">Loading users...</div>
-          ) : (
-            <div className="space-y-3 max-h-[420px] overflow-auto pr-1">
-              {users?.map(user => (
-                <button
-                  key={user.id}
-                  onClick={() => login(user)}
-                  className="w-full text-left p-4 rounded-2xl border border-slate-200 hover:border-blue-500/60 hover:bg-blue-50/40 transition-all flex justify-between items-center group"
-                >
-                  <div>
-                    <div className="font-semibold text-slate-900">{user.name}</div>
-                    <div className="text-sm text-slate-500 capitalize">{user.role.toLowerCase()}</div>
-                  </div>
-                  <LogIn className="text-gray-300 group-hover:text-blue-500" size={18} />
-                </button>
-              ))}
-              {users?.length === 0 && (
-                <p className="text-center text-slate-500 py-8">No users found. Create one to get started!</p>
-              )}
-            </div>
-          )}
-        </div>
+        {errorMsg && (
+          <div className="mb-6 p-4 rounded-xl bg-red-50 text-red-600 text-sm font-medium border border-red-100 flex items-center justify-center">
+            {errorMsg}
+          </div>
+        )}
 
-        {/* Create New User */}
-        <div className="bg-white/80 p-6 rounded-2xl shadow-sm border border-slate-200/70">
-          <h2 className="text-lg sm:text-xl font-semibold mb-5 flex items-center gap-2 text-slate-900">
-            <UserPlus className="text-green-600" />
-            Create New Profile
-          </h2>
-          <form onSubmit={handleCreateUser} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
-              <input
-                type="text"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                className="w-full p-3 rounded-2xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 outline-none"
-                placeholder="Enter name"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+        <form onSubmit={handleLogin} className="relative space-y-5">
+          <div className="relative">
+            <label className="text-sm font-semibold text-slate-700 ml-1 mb-1 block">Email</label>
+            <div className="relative">
+              <Mail className="absolute left-3.5 top-3.5 text-slate-400" size={20} />
               <input
                 type="email"
-                value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
-                className="w-full p-3 rounded-2xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 outline-none"
-                placeholder="Enter email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full pl-11 p-3.5 rounded-2xl border border-slate-200 bg-white/80 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                placeholder="name@example.com"
                 required
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
-              <select
-                value={newRole}
-                onChange={(e) => setNewRole(e.target.value)}
-                className="w-full p-3 rounded-2xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 outline-none"
-              >
-                <option value="POLICYHOLDER">Policy Holder</option>
-                <option value="CLAIM_ADJUSTER">Claim Adjuster</option>
-                <option value="CLAIM_MANAGER">Claim Manager</option>
-                <option value="ADMIN">Admin</option>
-              </select>
+          </div>
+          
+          <div className="relative">
+            <label className="text-sm font-semibold text-slate-700 ml-1 mb-1 block">Password</label>
+            <div className="relative">
+              <Lock className="absolute left-3.5 top-3.5 text-slate-400" size={20} />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full pl-11 p-3.5 rounded-2xl border border-slate-200 bg-white/80 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                placeholder="••••••••"
+                required
+              />
             </div>
-            <button
-              type="submit"
-              disabled={createUserMutation.isPending}
-              className="w-full rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-fuchsia-600 text-white py-3 font-semibold shadow-sm hover:shadow-md transition-all flex justify-center items-center gap-2 disabled:opacity-60"
-            >
-              {createUserMutation.isPending ? 'Creating...' : (
-                <>
-                  <UserPlus size={18} />
-                  Create and Login
-                </>
-              )}
-            </button>
-          </form>
-        </div>
-        </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loginMutation.isPending}
+            className="w-full mt-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-fuchsia-600 text-white py-4 font-semibold text-lg shadow-md hover:shadow-xl hover:scale-[1.02] transition-all flex justify-center items-center gap-2 disabled:opacity-60 disabled:hover:scale-100"
+          >
+            {loginMutation.isPending ? 'Authenticating...' : (
+              <>
+                <LogIn size={20} />
+                Sign In
+              </>
+            )}
+          </button>
+        </form>
+
+        <p className="mt-8 text-center text-slate-600 text-sm">
+          Don't have an account?{' '}
+          <Link to="/register" className="font-semibold text-blue-600 hover:text-blue-500 hover:underline transition-colors">
+            Create an account
+          </Link>
+        </p>
       </div>
     </div>
   );

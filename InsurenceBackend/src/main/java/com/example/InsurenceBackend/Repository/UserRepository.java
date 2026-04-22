@@ -7,4 +7,8 @@ import com.example.InsurenceBackend.enums.UserRole;
 import com.example.InsurenceBackend.model.User;
 public interface UserRepository extends JpaRepository<User, Long> {
     public List<User> findByRole(UserRole role);
+
+    public boolean existsByEmail(String email);
+
+    public User findByEmail(String email);
 }
