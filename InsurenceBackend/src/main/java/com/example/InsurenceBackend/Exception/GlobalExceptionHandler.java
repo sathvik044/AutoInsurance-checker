@@ -63,6 +63,15 @@ public class GlobalExceptionHandler {
         return buildResponse(ex.getMessage(), 400, request.getContextPath());
     }
 
+    // RUNTIME EXCEPTION (for login errors etc)
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ErrorResponse> handleRuntime(
+            RuntimeException ex,
+            WebRequest request) {
+        log.error("Runtime exception: {}", ex.getMessage());
+        return buildResponse(ex.getMessage(), 400, request.getDescription(false).replace("uri=", ""));
+    }
+
     // ALL OTHER ERRORS
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobal(
@@ -70,7 +79,7 @@ public class GlobalExceptionHandler {
             WebRequest request) {
         log.error("Unhandled exception: ", ex);
         String path = request.getDescription(false).replace("uri=", "");
-        return buildResponse("Internal Server Error", 500, path);
+        return buildResponse(ex.getMessage() != null ? ex.getMessage() : "Internal Server Error", 500, path);
     }
 
     // COMMON METHOD

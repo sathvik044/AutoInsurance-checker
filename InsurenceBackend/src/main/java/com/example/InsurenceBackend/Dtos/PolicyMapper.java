@@ -12,18 +12,23 @@ public class PolicyMapper {
     private static LocalDateTime parseDate(String dateStr) {
         if (dateStr == null || dateStr.isEmpty()) return null;
         try {
-            // This handles both offset-aware (Z, +05:30) and local date times
-            return ZonedDateTime.parse(dateStr, DateTimeFormatter.ISO_DATE_TIME).toLocalDateTime();
+            // Handle ISO_DATE_TIME (e.g., 2023-10-27T10:30:00)
+            return LocalDateTime.parse(dateStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         } catch (Exception e) {
             try {
-                return LocalDateTime.parse(dateStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                // Handle ISO_DATE (e.g., 2023-10-27)
+                return java.time.LocalDate.parse(dateStr, DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay();
             } catch (Exception e2) {
-                return null;
+                try {
+                    return ZonedDateTime.parse(dateStr).toLocalDateTime();
+                } catch (Exception e3) {
+                    return null;
+                }
             }
         }
     }
 
-    public static Policy toEntity(PolicyRequest request, User user) {
+    public static Policy toEntity(PolicyRequest request, User user, User manager) {
         if (request == null) return null;
         
         return Policy.builder()
@@ -32,6 +37,7 @@ public class PolicyMapper {
                 .startDate(parseDate(request.getStartDate()))
                 .endDate(parseDate(request.getEndDate()))
                 .policyholder(user)
+                .assignedManager(manager)
                 .status(PolicyStatus.ACTIVATE)
                 .build();
     }
@@ -41,6 +47,8 @@ public class PolicyMapper {
         return PolicyResponse.builder()
                 .id(policy.getId())
                 .policyholderId(policy.getPolicyholder() != null ? policy.getPolicyholder().getId() : null)
+                .managerId(policy.getAssignedManager() != null ? policy.getAssignedManager().getId() : null)
+                .managerName(policy.getAssignedManager() != null ? policy.getAssignedManager().getName() : null)
                 .policyType(policy.getPolicyType() != null ? policy.getPolicyType().name() : null)
                 .premiumAmount(policy.getPremiumAmount())
                 .startDate(policy.getStartDate() != null ? policy.getStartDate().toString() : null)

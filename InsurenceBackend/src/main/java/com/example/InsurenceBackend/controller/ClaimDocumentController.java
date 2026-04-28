@@ -23,7 +23,6 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/documents")
-@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class ClaimDocumentController {
 

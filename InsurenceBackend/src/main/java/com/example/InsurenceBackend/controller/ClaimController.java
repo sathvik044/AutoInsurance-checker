@@ -8,7 +8,6 @@ import com.example.InsurenceBackend.service.ClaimService;
 
 @RestController
 @RequestMapping("/api/claims")
-@CrossOrigin(origins = "*")
 public class ClaimController {
 
     private final ClaimService claimService;

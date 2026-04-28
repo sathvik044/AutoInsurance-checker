@@ -13,7 +13,6 @@ import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/policies")
-@CrossOrigin(origins = "*")
 public class PolicyController {
 
     private final PolicyService policyService;

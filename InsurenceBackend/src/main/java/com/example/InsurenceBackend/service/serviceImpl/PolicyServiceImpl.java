@@ -38,7 +38,14 @@ public UserRepository userRepo;
      public PolicyResponse createPolicy(PolicyRequest request) {
         User user = userRepo.findById(request.getPolicyholderId())
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + request.getPolicyholderId()));
-        Policy policy = PolicyMapper.toEntity(request, user);
+        
+        User manager = null;
+        if (request.getManagerId() != null) {
+            manager = userRepo.findById(request.getManagerId())
+                    .orElseThrow(() -> new UserNotFoundException("Manager not found with id: " + request.getManagerId()));
+        }
+        
+        Policy policy = PolicyMapper.toEntity(request, user, manager);
         if (policy.getStartDate() == null) {
             policy.setStartDate(java.time.LocalDateTime.now());
         }

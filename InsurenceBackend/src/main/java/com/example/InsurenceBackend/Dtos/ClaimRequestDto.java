@@ -7,13 +7,13 @@ import com.example.InsurenceBackend.enums.ClaimType;
 
 import lombok.Data;
 @Builder
-  @Data
+@Data
 public class ClaimRequestDto {
     private Long policyId;
     private Long claimantId;
     private ClaimType claimType;
     private String description;
-    private LocalDateTime incidentDate;
+    private String incidentDate;
 }
     
 

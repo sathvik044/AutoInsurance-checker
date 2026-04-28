@@ -25,6 +25,11 @@ public class Policy {
     @JoinColumn(name = "policyholder_id")
     @JsonIgnore
     private User policyholder;
+
+    @ManyToOne
+    @JoinColumn(name = "manager_id")
+    private User assignedManager;
+
     @Enumerated(EnumType.STRING)
     private PolicyType policyType;
     private double premiumAmount;

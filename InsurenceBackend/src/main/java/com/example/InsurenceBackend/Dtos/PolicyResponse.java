@@ -13,6 +13,8 @@ import lombok.NoArgsConstructor;
 public class PolicyResponse {
 private Long id;    
 private Long policyholderId;
+private Long managerId;
+private String managerName;
 private String policyType;
 private double premiumAmount;
 private String startDate;

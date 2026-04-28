@@ -4,6 +4,7 @@ import lombok.Data;
 @Data
 public class PolicyRequest {
     private Long policyholderId;
+    private Long managerId;
     private PolicyType policyType;
     private double premiumAmount;
     private String startDate;
